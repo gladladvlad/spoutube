@@ -59,12 +59,13 @@ def search_youtube(driver, query):
 
 
 def dl_track(driver, track, ytdl_options):
+    #query = f"{track['artist']} {track['name']} {track['album']}"
     query = f"{track['artist']} {track['name']}"
     search_results = search_youtube(driver, query)
-    chosen = search_results[0].get_attribute('href')
+    link = search_results[0].get_attribute('href')
 
     ytdl = yt_dlp.YoutubeDL(ytdl_options)
-    ytdl.download(chosen)
+    ytdl.download(link)
 
 
 def dl_playlist(driver, playlist):
@@ -73,7 +74,12 @@ def dl_playlist(driver, playlist):
         filename_prefix = str(track_index).zfill(len(str(len(playlist['tracks']))))
 
         before = time.time()
-        ytdl_options = {'extract_audio': True, 'format': 'bestaudio', 'outtmpl': f'{filename_prefix} - %(title)s.mp3'}
+        ytdl_options = {
+            'extract_audio': True,
+            'format': 'bestaudio',
+            'outtmpl': f'{filename_prefix} - %(title)s.mp3',
+            'paths': {'home': f'./{playlist["name"]}'}
+        }
         dl_track(driver, track, ytdl_options)
         after = time.time()
         elapsed = after - before
