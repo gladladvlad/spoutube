@@ -2,6 +2,9 @@
 
 import time
 import json
+
+import urllib
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -46,9 +49,9 @@ def start_webdriver():
 
 
 def search_youtube(driver, query):
-    #TODO: sanitize artist name, track name, etc.
-    query = query.replace(" ", "+")
+    query = urllib.parse.quote_plus(query)
     link = "https://www.youtube.com/results?search_query={}".format(query)
+
     driver.get(link)
     search_results = driver.find_elements(by=By.CSS_SELECTOR, value="a[id='video-title']")
 
@@ -88,7 +91,6 @@ print("Which playlist to download? Input the index: ")
 plist_index = int(input())
 
 driver = start_webdriver()
-
 playlist = playlists[plist_index]
 dl_playlist(driver, playlist)
 
