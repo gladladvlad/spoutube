@@ -1,15 +1,18 @@
 #!/bin/python3
 
+import os
 import time
 import json
-
+import pathlib
 import urllib
+
+import yt_dlp
+from ffmpeg import FFmpeg
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
-import yt_dlp
 
 min_wait = 7.5
 
@@ -58,7 +61,27 @@ def search_youtube(driver, query):
     return search_results
 
 
+def convert_mp3(path_in, path_out):
+    path_in = pathlib.Path(path_in)
+    path_out = pathlib.Path(path_out)
+
+    ffmpeg = (
+        FFmpeg()
+        .option("y")
+        .input(str(path_in.resolve()))
+        .output(
+            str(path_out.resolve()),
+            {"codec:a": "libmp3lame"}
+        )
+    )
+
+    ffmpeg.execute()
+
+
 def dl_track(driver, track, ytdl_options):
+    #downloads the audio stream off youtube with whatever 
+    #container yt was using
+
     #query = f"{track['artist']} {track['name']} {track['album']}"
     query = f"{track['artist']} {track['name']}"
     search_results = search_youtube(driver, query)
@@ -69,6 +92,10 @@ def dl_track(driver, track, ytdl_options):
 
 
 def dl_playlist(driver, playlist):
+    pl_name = playlist['name'].replace("/", " ")
+    dl_path = pathlib.Path(os.getcwd()).joinpath(pl_name)
+    print(dl_path)
+
     track_index = 0
     for track in playlist['tracks']:
         filename_prefix = str(track_index).zfill(len(str(len(playlist['tracks']))))
@@ -78,7 +105,7 @@ def dl_playlist(driver, playlist):
             'extract_audio': True,
             'format': 'bestaudio',
             'outtmpl': f'{filename_prefix} - %(title)s.mp3',
-            'paths': {'home': f'./{playlist["name"]}'}
+            'paths': {'home': str(dl_path.resolve())}
         }
         dl_track(driver, track, ytdl_options)
         after = time.time()
@@ -100,8 +127,10 @@ driver = start_webdriver()
 playlist = playlists[plist_index]
 dl_playlist(driver, playlist)
 
-#for item in search_results:
-#    print("details: " + item.get_attribute("aria-label"))
-#    print("link: " + item.get_attribute("href"))
-
 driver.quit()
+
+#fin = "/home/vlad/workspace/spoutube/test.opus"
+#fout = "/home/vlad/workspace/spoutube/out.mp3"
+#
+#convert_mp3(fin, fout)
+
