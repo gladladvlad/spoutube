@@ -75,7 +75,7 @@ def convert_mp3(path_in, path_out):
     ffmpeg.execute()
 
 
-def dl_track(driver, track, ytdl_options):
+def dl_track(driver, track, dir_path):
     #downloads the audio stream off youtube with whatever 
     #container yt was using
 
@@ -84,6 +84,11 @@ def dl_track(driver, track, ytdl_options):
     search_results = search_youtube(driver, query)
     link = search_results[0].get_attribute('href')
 
+    ytdl_options = {
+        'extract_audio': True,
+        'format': 'bestaudio',
+        'paths': {'home': dir_path}
+    }
     ytdl = yt_dlp.YoutubeDL(ytdl_options)
     info = ytdl.extract_info(link, download=True)
 
@@ -92,7 +97,6 @@ def dl_track(driver, track, ytdl_options):
 
 
 def dl_playlist(driver, playlist):
-    #ext = '.opus'
     pl_name = playlist['name'].replace("/", " ")
     dl_path = pathlib.Path(os.getcwd()).joinpath(pl_name)
     print(dl_path)
@@ -100,13 +104,7 @@ def dl_playlist(driver, playlist):
     track_index = 0
     for track in playlist['tracks']:
         before = time.time()
-        ytdl_options = {
-            'extract_audio': True,
-            'format': 'bestaudio',
-            #'outtmpl': '%(title)s',
-            'paths': {'home': str(dl_path.resolve())}
-        }
-        info = dl_track(driver, track, ytdl_options)
+        info = dl_track(driver, track, str(dl_path.resolve()))
 
 
         source_track_path = pathlib.Path(info['requested_downloads'][0]['filepath'])
@@ -128,20 +126,16 @@ def dl_playlist(driver, playlist):
         track_index += 1
 
 
-playlists = load_playlists()
-list_playlists(playlists)
+if __name__ == "__main__":
+    playlists = load_playlists()
+    list_playlists(playlists)
 
-print("Which playlist to download? Input the index: ")
-plist_index = int(input())
+    print("Which playlist to download? Input the index: ")
+    plist_index = int(input())
 
-driver = start_webdriver()
-playlist = playlists[plist_index]
-dl_playlist(driver, playlist)
+    driver = start_webdriver()
+    playlist = playlists[plist_index]
+    dl_playlist(driver, playlist)
 
-driver.quit()
-
-#fin = "/home/vlad/workspace/spoutube/tmp/The Bad Plus Joshua Redman 'As This Moment Slips Away' ｜ Live Studio Session.opus"
-#fout = "/home/vlad/workspace/spoutube/out.mp3"
-#
-#convert_mp3(fin, fout)
+    driver.quit()
 
