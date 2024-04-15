@@ -62,15 +62,12 @@ def search_youtube(driver, query):
 
 
 def convert_mp3(path_in, path_out):
-    path_in = pathlib.Path(path_in)
-    path_out = pathlib.Path(path_out)
-
     ffmpeg = (
         FFmpeg()
         .option("y")
-        .input(str(path_in.resolve()))
+        .input(path_in)
         .output(
-            str(path_out.resolve()),
+            path_out,
             {"codec:a": "libmp3lame"}
         )
     )
@@ -88,31 +85,45 @@ def dl_track(driver, track, ytdl_options):
     link = search_results[0].get_attribute('href')
 
     ytdl = yt_dlp.YoutubeDL(ytdl_options)
-    ytdl.download(link)
+    info = ytdl.extract_info(link, download=True)
+
+    ytdl.close()
+    return info
 
 
 def dl_playlist(driver, playlist):
+    #ext = '.opus'
     pl_name = playlist['name'].replace("/", " ")
     dl_path = pathlib.Path(os.getcwd()).joinpath(pl_name)
     print(dl_path)
 
     track_index = 0
     for track in playlist['tracks']:
-        filename_prefix = str(track_index).zfill(len(str(len(playlist['tracks']))))
-
         before = time.time()
         ytdl_options = {
             'extract_audio': True,
             'format': 'bestaudio',
-            'outtmpl': f'{filename_prefix} - %(title)s.mp3',
+            #'outtmpl': '%(title)s',
             'paths': {'home': str(dl_path.resolve())}
         }
-        dl_track(driver, track, ytdl_options)
-        after = time.time()
-        elapsed = after - before
+        info = dl_track(driver, track, ytdl_options)
 
+
+        source_track_path = pathlib.Path(info['requested_downloads'][0]['filepath'])
+
+        filename_prefix = str(track_index).zfill(len(str(len(playlist['tracks']))))
+        mp3_filename = filename_prefix + " - " + info['title'] + '.mp3'
+        mp3_track_path = dl_path.joinpath(mp3_filename)
+
+        convert_mp3(str(source_track_path.resolve()), str(mp3_track_path.resolve()))
+        source_track_path.unlink()
+
+
+        elapsed = time.time() - before
         if elapsed < min_wait:
-            time.sleep(min_wait - elapsed)
+            remainder = min_wait - elapsed
+            print(f"Waiting {remainder} seconds...")
+            time.sleep(remainder)
 
         track_index += 1
 
@@ -129,7 +140,7 @@ dl_playlist(driver, playlist)
 
 driver.quit()
 
-#fin = "/home/vlad/workspace/spoutube/test.opus"
+#fin = "/home/vlad/workspace/spoutube/tmp/The Bad Plus Joshua Redman 'As This Moment Slips Away' ｜ Live Studio Session.opus"
 #fout = "/home/vlad/workspace/spoutube/out.mp3"
 #
 #convert_mp3(fin, fout)
