@@ -5,6 +5,8 @@ import time
 import json
 import pathlib
 import urllib
+import argparse
+import sys
 
 import yt_dlp
 from ffmpeg import FFmpeg
@@ -96,10 +98,9 @@ def dl_track(driver, track, dir_path):
     return info
 
 
-def dl_playlist(driver, playlist):
+def dl_playlist(driver, playlist, dl_dir):
     pl_name = playlist['name'].replace("/", " ")
-    dl_path = pathlib.Path(os.getcwd()).joinpath(pl_name)
-    print(dl_path)
+    dl_path = pathlib.Path(dl_dir).joinpath(pl_name)
 
     track_index = 0
     for track in playlist['tracks']:
@@ -127,15 +128,31 @@ def dl_playlist(driver, playlist):
 
 
 if __name__ == "__main__":
+    description = "Reads a spotify-playlists.json in the same folder \
+    and, for each entry, look up the same song on YouTube and download \
+    the audio stream then convert it to mp3."
+
+    parser = argparse.ArgumentParser(
+        sys.argv[0],
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=description)
+
+    parser.add_argument("-o", dest="dl_dir",
+                        help="Path to dir where the playlist will be downloaded.",
+                        type=str,
+                        default='./')
+
+    args = parser.parse_args()
+
+
     playlists = load_playlists()
     list_playlists(playlists)
-
     print("Which playlist to download? Input the index: ")
     plist_index = int(input())
 
     driver = start_webdriver()
     playlist = playlists[plist_index]
-    dl_playlist(driver, playlist)
+    dl_playlist(driver, playlist, args.dl_dir)
 
     driver.quit()
 
