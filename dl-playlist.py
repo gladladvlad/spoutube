@@ -64,7 +64,9 @@ def search_youtube(driver, query):
     driver.get(link)
     search_results = driver.find_elements(by=By.CSS_SELECTOR, value="a[id='video-title']")
 
-    return search_results
+    #for now, just return the first result
+    ret_link = search_results[0].get_attribute('href')
+    return ret_link
 
 
 def convert_mp3(path_in, path_out):
@@ -85,13 +87,11 @@ def dl_track(driver, track, dir_path):
     #downloads the audio stream off youtube with whatever 
     #container yt was using
 
-    #query = f"{track['artist']} {track['name']} {track['album']}"
     #TODO: some tracks have multiple artists!!!!!
     #TODO: some tracks have multiple artists!!!!!
     #TODO: some tracks have multiple artists!!!!!
     query = f"{track['artist']} {track['name']}"
-    search_results = search_youtube(driver, query)
-    link = search_results[0].get_attribute('href')
+    link = search_youtube(driver, query)
 
     ytdl_options = {
         'extract_audio': True,
@@ -105,33 +105,34 @@ def dl_track(driver, track, dir_path):
     return info
 
 
-def dl_playlist(driver, playlist, dl_dir):
-    pl_name = playlist['name'].replace("/", " ")
-    dl_path = pathlib.Path(dl_dir).joinpath(pl_name)
+def dl_playlist(driver, playlists, dl_dir):
+    for playlist in playlists:
+        pl_name = playlist['name'].replace("/", " ")
+        dl_path = pathlib.Path(dl_dir).joinpath(pl_name)
 
-    track_index = 0
-    for track in playlist['tracks']:
-        before = time.time()
-        info = dl_track(driver, track, str(dl_path.resolve()))
-
-
-        source_track_path = pathlib.Path(info['requested_downloads'][0]['filepath'])
-
-        filename_prefix = str(track_index).zfill(len(str(len(playlist['tracks']))))
-        mp3_filename = filename_prefix + " - " + info['title'] + '.mp3'
-        mp3_track_path = dl_path.joinpath(mp3_filename)
-
-        convert_mp3(str(source_track_path.resolve()), str(mp3_track_path.resolve()))
-        source_track_path.unlink()
+        track_index = 0
+        for track in playlist['tracks']:
+            before = time.time()
+            info = dl_track(driver, track, str(dl_path.resolve()))
 
 
-        elapsed = time.time() - before
-        if elapsed < MIN_WAIT:
-            remainder = MIN_WAIT - elapsed
-            print(f"Waiting {remainder} seconds...")
-            time.sleep(remainder)
+            source_track_path = pathlib.Path(info['requested_downloads'][0]['filepath'])
 
-        track_index += 1
+            filename_prefix = str(track_index).zfill(len(str(len(playlist['tracks']))))
+            mp3_filename = filename_prefix + " - " + info['title'] + '.mp3'
+            mp3_track_path = dl_path.joinpath(mp3_filename)
+
+            convert_mp3(str(source_track_path.resolve()), str(mp3_track_path.resolve()))
+            source_track_path.unlink()
+
+
+            elapsed = time.time() - before
+            if elapsed < MIN_WAIT:
+                remainder = MIN_WAIT - elapsed
+                print(f"Waiting {remainder} seconds...")
+                time.sleep(remainder)
+
+            track_index += 1
 
 
 if __name__ == "__main__":
@@ -182,8 +183,9 @@ if __name__ == "__main__":
 
     elif args.command == "download":
         driver = start_webdriver()
-        print(f"Downloading \"{matches[0]['name']}\"")
-        dl_playlist(driver, matches[0], args.dl_dir_path)
+        names = [item['name'] for item in matches]
+        print(f"Downloading {names}...")
+        dl_playlist(driver, matches, args.dl_dir_path)
 
         driver.quit()
 
