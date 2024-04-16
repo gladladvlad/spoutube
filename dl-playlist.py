@@ -14,10 +14,12 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
+from typing import Dict, List
+
 
 MIN_WAIT = 7.5
 
-def load_playlists(path):
+def load_playlists(path: str):
     plist_file = open(path, 'r')
     playlists = json.loads(plist_file.read())
     plist_file.close()
@@ -25,12 +27,12 @@ def load_playlists(path):
     return playlists
 
 
-def search_playlist(playlists, name):
+def search_playlist(playlists: List[Dict], name: str, regex: bool):
     matches = [item for item in playlists if item["name"].startswith(name)]
     return matches
 
 
-def list_playlists(playlists):
+def list_playlists(playlists: List[Dict]):
     index = 0
     for plist in playlists:
         #print('---')
@@ -57,7 +59,7 @@ def start_webdriver():
     return driver
 
 
-def search_youtube(driver, query):
+def search_youtube(driver: webdriver.chromium.webdriver.ChromiumDriver, query: str):
     query = urllib.parse.quote_plus(query)
     link = "https://www.youtube.com/results?search_query={}".format(query)
 
@@ -69,7 +71,7 @@ def search_youtube(driver, query):
     return ret_link
 
 
-def convert_mp3(path_in, path_out):
+def convert_mp3(path_in: str, path_out: str):
     ffmpeg = (
         FFmpeg()
         .option("y")
@@ -83,7 +85,7 @@ def convert_mp3(path_in, path_out):
     ffmpeg.execute()
 
 
-def dl_track(driver, track, dir_path):
+def dl_track(driver: webdriver.chromium.webdriver.ChromiumDriver, track, dir_path: str):
     #downloads the audio stream off youtube with whatever 
     #container yt was using
 
@@ -105,7 +107,9 @@ def dl_track(driver, track, dir_path):
     return info
 
 
-def dl_playlist(driver, playlists, dl_dir):
+def dl_playlist(driver: webdriver.chromium.webdriver.ChromiumDriver,
+                playlists: List[Dict], dl_dir: str):
+
     for playlist in playlists:
         pl_name = playlist['name'].replace("/", " ")
         dl_path = pathlib.Path(dl_dir).joinpath(pl_name)
@@ -160,6 +164,13 @@ if __name__ == "__main__":
                         type=str,
                         required=True)
 
+    parser.add_argument("-r", "--regex", dest="search_regex",
+                        help="If passed, the name of the playlist will instead be interpreted as a regular expression.",
+                        type=bool,
+                        nargs='?',
+                        const=True,
+                        default=False)
+
     parser.add_argument("-c", "--command", dest="command",
                         help="Operation to perform on the playlist.",
                         type=str,
@@ -175,7 +186,7 @@ if __name__ == "__main__":
     MIN_WAIT = args.min_wait
 
     playlists = load_playlists(args.playlist_path)
-    matches = search_playlist(playlists, args.plist_name)
+    matches = search_playlist(playlists, args.plist_name, args.search_regex)
 
     if args.command == "search":
         print(f"{len(matches)} matches.")
@@ -183,6 +194,7 @@ if __name__ == "__main__":
 
     elif args.command == "download":
         driver = start_webdriver()
+        breakpoint()
         names = [item['name'] for item in matches]
         print(f"Downloading {names}...")
         dl_playlist(driver, matches, args.dl_dir_path)
