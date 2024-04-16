@@ -19,13 +19,13 @@ In the same terminal instance, install all libs:
 It's important to make sure you run this command immediately after you run 'activate' if you don't want these libraries installed system-wide.
 
 ### Usage/examples:
-Download all playlists (read from `./spotify-playlists`) that contain the word 'banger' somewhere in the name into path `./tmp`:  
-`python3 ./dl-playlist.py -i './spotify-playlists.json' -o './tmp' -n '.?bangers.?' --regex --command download`
+Download all playlists (read from `"./my-songs.json"`) that contain the word 'banger' somewhere in the name into path `"./path/to/dir"`:  
+`python3 ./dl-playlist.py -i './my-songs.json' -o './path/to/dir' -n '.?bangers.?' --regex --command download`
 
 Arguments explained:
 
-`-i`: path to the playlists JSON  
-`-o`: path to the "output" directory  
-`-n`: name of the playlist you want the script to "affect"  
-`--regex`: interpret the name (from `-n` arg) as a regular expression  
+`-i`: path to the playlists JSON. If omitted, will use default value `"./spotify-playlists.json"`.  
+`-o`: path to the "output" directory.  
+`-n`: name of the playlist you want the script to "affect.  
+`--regex`: interpret the name (from `-n` arg) as a regular expression.  
 `--command`: self-explanatory: download the playlist. This arg only supports `download` and `search` but might be updated in the future. Maybe.  
