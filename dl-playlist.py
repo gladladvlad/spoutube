@@ -6,6 +6,7 @@ import pathlib
 import urllib
 import argparse
 import sys
+import re
 
 import yt_dlp
 from ffmpeg import FFmpeg
@@ -27,9 +28,13 @@ def load_playlists(path: str):
     return playlists
 
 
-def search_playlist(playlists: List[Dict], name: str, regex: bool):
-    matches = [item for item in playlists if item["name"].startswith(name)]
-    return matches
+def search_playlist(playlists: List[Dict], name: str):
+    return [item for item in playlists if item['name'].startswith(name)]
+
+
+def search_playlist_regex(playlists: List[Dict], regex: str):
+    matcher = re.compile(regex)
+    return [item for item in playlists if matcher.match(item['name']) is not None]
 
 
 def list_playlists(playlists: List[Dict]):
@@ -186,15 +191,21 @@ if __name__ == "__main__":
     MIN_WAIT = args.min_wait
 
     playlists = load_playlists(args.playlist_path)
-    matches = search_playlist(playlists, args.plist_name, args.search_regex)
+
+    matches = None
+    if args.search_regex:
+        matches = search_playlist_regex(playlists, args.plist_name)
+    else:
+        matches = search_playlist(playlists, args.plist_name)
 
     if args.command == "search":
         print(f"{len(matches)} matches.")
-        print(json.dumps(matches, indent=4, ensure_ascii=False))
+        #print(json.dumps(matches, indent=4, ensure_ascii=False))
+        names = [item['name'] for item in matches]
+        print(f"Found: {names}.")
 
     elif args.command == "download":
         driver = start_webdriver()
-        breakpoint()
         names = [item['name'] for item in matches]
         print(f"Downloading {names}...")
         dl_playlist(driver, matches, args.dl_dir_path)
