@@ -1,7 +1,7 @@
 # spoutube
 ### Download your Spotify playlists off YouTube.
 
-This README.md is a work in progress.
+This README.md is a work in progress. I also didn't test this on other systems so maybe I missed some obscure dependencies in the `Setup` section.
 
 ### Setup:
 
@@ -17,3 +17,15 @@ In the same terminal instance, install all libs:
     `python -m pip install -r requirements.txt`  
 
 It's important to make sure you run this command immediately after you run 'activate' if you don't want these libraries installed system-wide.
+
+### Usage/examples:
+Download all playlists (read from `./spotify-playlists`) that contain the word 'banger' somewhere in the name into path `./tmp`:
+`python3 ./dl-playlist.py -i './spotify-playlists.json' -o './tmp' -n '.?bangers.?' --regex --command download`
+
+Arguments explained:
+
+`-i`: path to the playlists JSON
+`-o`: path to the "output" directory
+`-n`: name of the playlist you want the script to "affect"
+`--regex`: interpret the name (from `-n` arg) as a regular expression
+`--command`: self-explanatory: download the playlist. This arg only supports `download` and `search` but might be updated in the future. Maybe.
