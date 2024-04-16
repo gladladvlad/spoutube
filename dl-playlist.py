@@ -1,6 +1,5 @@
 #!/bin/python3
 
-import os
 import time
 import json
 import pathlib
@@ -24,6 +23,11 @@ def load_playlists(path):
     plist_file.close()
 
     return playlists
+
+
+def search_playlist(playlists, name):
+    matches = [item for item in playlists if item["name"].startswith(name)]
+    return matches
 
 
 def list_playlists(playlists):
@@ -82,6 +86,9 @@ def dl_track(driver, track, dir_path):
     #container yt was using
 
     #query = f"{track['artist']} {track['name']} {track['album']}"
+    #TODO: some tracks have multiple artists!!!!!
+    #TODO: some tracks have multiple artists!!!!!
+    #TODO: some tracks have multiple artists!!!!!
     query = f"{track['artist']} {track['name']}"
     search_results = search_youtube(driver, query)
     link = search_results[0].get_attribute('href')
@@ -147,15 +154,15 @@ if __name__ == "__main__":
                         type=str,
                         default='./spotify-playlists.json')
 
-    parser.add_argument("-p", "--playlist-index", dest="plist_index",
-                        help="Index of the playlist to download in the JSON. Omit this to list the playlists.",
-                        type=int,
-                        default=None)
+    parser.add_argument("-n", "--playlist-name", dest="plist_name",
+                        help="Name of the playlist to download in the JSON. Matches if playlist starts with this name.",
+                        type=str,
+                        required=True)
 
     parser.add_argument("-c", "--command", dest="command",
                         help="Operation to perform on the playlist.",
                         type=str,
-                        choices=['list', 'download'],
+                        choices=['download', 'search'],
                         required=True)
 
     parser.add_argument("-t", "--min-wait-time", dest="min_wait",
@@ -167,14 +174,16 @@ if __name__ == "__main__":
     MIN_WAIT = args.min_wait
 
     playlists = load_playlists(args.playlist_path)
+    matches = search_playlist(playlists, args.plist_name)
 
-    if args.command == "list":
-        list_playlists(playlists)
+    if args.command == "search":
+        print(f"{len(matches)} matches.")
+        print(json.dumps(matches, indent=4, ensure_ascii=False))
 
     elif args.command == "download":
         driver = start_webdriver()
-        playlist = playlists[args.plist_index]
-        dl_playlist(driver, playlist, args.dl_dir_path)
+        print(f"Downloading \"{matches[0]['name']}\"")
+        dl_playlist(driver, matches[0], args.dl_dir_path)
 
         driver.quit()
 
