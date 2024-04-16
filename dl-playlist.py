@@ -200,13 +200,17 @@ if __name__ == "__main__":
 
     if args.command == "search":
         print(f"{len(matches)} matches.")
-        #print(json.dumps(matches, indent=4, ensure_ascii=False))
+
         names = [item['name'] for item in matches]
         print(f"Found: {names}.")
+
+        print("More verbose output:")
+        print(json.dumps(matches, indent=4, ensure_ascii=False))
 
     elif args.command == "download":
         driver = start_webdriver()
         names = [item['name'] for item in matches]
+
         print(f"Downloading {names}...")
         dl_playlist(driver, matches, args.dl_dir_path)
 
