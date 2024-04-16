@@ -16,10 +16,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
 
-min_wait = 7.5
+MIN_WAIT = 7.5
 
-def load_playlists():
-    plist_file = open('spotify-playlists.json', 'r')
+def load_playlists(path):
+    plist_file = open(path, 'r')
     playlists = json.loads(plist_file.read())
     plist_file.close()
 
@@ -30,14 +30,14 @@ def list_playlists(playlists):
     index = 0
     for plist in playlists:
         #print('---')
-        print(str(index) + " " + plist['name'])
+        print(str(index) + "\t" + plist['name'])
         #print('---')
 
-       #for track in plist['tracks']:
-       #    artist = track['artist']
-       #    name = track['name']
-       #    album = track['album']
-       #    print(f'track: "{name}" by "{artist}" from "{album}"')
+        #for track in plist['tracks']:
+        #   artist = track['artist']
+        #   name = track['name']
+        #   album = track['album']
+        #   print(f'track: "{name}" by "{artist}" from "{album}"')
 
         index += 1
 
@@ -119,8 +119,8 @@ def dl_playlist(driver, playlist, dl_dir):
 
 
         elapsed = time.time() - before
-        if elapsed < min_wait:
-            remainder = min_wait - elapsed
+        if elapsed < MIN_WAIT:
+            remainder = MIN_WAIT - elapsed
             print(f"Waiting {remainder} seconds...")
             time.sleep(remainder)
 
@@ -137,22 +137,44 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=description)
 
-    parser.add_argument("-o", dest="dl_dir",
+    parser.add_argument("-o", "--out-dir", dest="dl_dir_path",
                         help="Path to dir where the playlist will be downloaded.",
                         type=str,
                         default='./')
 
+    parser.add_argument("-i", "--input-playlist", dest="playlist_path",
+                        help="Path to the JSON from where the playlists will be read.",
+                        type=str,
+                        default='./spotify-playlists.json')
+
+    parser.add_argument("-p", "--playlist-index", dest="plist_index",
+                        help="Index of the playlist to download in the JSON. Omit this to list the playlists.",
+                        type=int,
+                        default=None)
+
+    parser.add_argument("-c", "--command", dest="command",
+                        help="Operation to perform on the playlist.",
+                        type=str,
+                        choices=['list', 'download'],
+                        required=True)
+
+    parser.add_argument("-t", "--min-wait-time", dest="min_wait",
+                        help="In seconds. Minimum time to enforce between each track that was 'processed'.",
+                        type=int,
+                        default=10)
+
     args = parser.parse_args()
+    MIN_WAIT = args.min_wait
 
+    playlists = load_playlists(args.playlist_path)
 
-    playlists = load_playlists()
-    list_playlists(playlists)
-    print("Which playlist to download? Input the index: ")
-    plist_index = int(input())
+    if args.command == "list":
+        list_playlists(playlists)
 
-    driver = start_webdriver()
-    playlist = playlists[plist_index]
-    dl_playlist(driver, playlist, args.dl_dir)
+    elif args.command == "download":
+        driver = start_webdriver()
+        playlist = playlists[args.plist_index]
+        dl_playlist(driver, playlist, args.dl_dir_path)
 
-    driver.quit()
+        driver.quit()
 
