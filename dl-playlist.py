@@ -18,7 +18,7 @@ from selenium.webdriver.chrome.options import Options
 from typing import Dict, List
 
 
-MIN_WAIT = 7.5
+MIN_WAIT = 10
 
 def load_playlists(path: str):
     plist_file = open(path, 'r')
@@ -185,9 +185,10 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--min-wait-time", dest="min_wait",
                         help="In seconds. Minimum time to enforce between each track that was 'processed'.",
                         type=int,
-                        default=10)
+                        default=MIN_WAIT)
 
     args = parser.parse_args()
+    #uhhhhh... yeah.
     MIN_WAIT = args.min_wait
 
     playlists = load_playlists(args.playlist_path)
