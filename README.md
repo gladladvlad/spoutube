@@ -3,7 +3,7 @@
 
 This script uses a headless Google Chrome instance to search for the songs on YouTube. So if you have any security or privacy concerns regarding that, maybe don't use this lol.
 
-This README.md is a work in progress. I also didn't test this on other systems so maybe I missed some obscure dependencies in the `Setup` section.
+This README.md is a work in progress. I also didn't test this on other systems (actually at all lmao) so maybe I missed some obscure dependencies in the `Setup` section.
 
 ### Setup:
 Create a python venv:  
