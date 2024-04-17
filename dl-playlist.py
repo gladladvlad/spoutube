@@ -91,13 +91,16 @@ def convert_mp3(path_in: str, path_out: str):
 
 
 def dl_track(driver: webdriver.chromium.webdriver.ChromiumDriver, track, dir_path: str):
-    #downloads the audio stream off youtube with whatever 
+    #downloads the audio stream off youtube with whatever
     #container yt was using
 
-    #TODO: some tracks have multiple artists!!!!!
-    #TODO: some tracks have multiple artists!!!!!
-    #TODO: some tracks have multiple artists!!!!!
-    query = f"{track['artist']} {track['name']}"
+    #some tracks have multiple artists
+    #and unfortunately, track['artist'] can be either list or string
+    artist = track['artist']
+    if isinstance(track['artist'], list):
+        artist = " ".join(track['artist'])
+
+    query = f"{track['name']} {artist}"
     link = search_youtube(driver, query)
 
     ytdl_options = {
